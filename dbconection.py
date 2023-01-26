@@ -70,11 +70,17 @@ class Repository:
         df = pd.DataFrame(data=data, columns=['url','Precio','Actualizacion','Orden','Concesionario VW'])
 
         df.to_excel('/Users/dnogues/Library/CloudStorage/OneDrive-ESPASASA/Meli Precios/Meli2.xlsx')
+
+    def dealers_price_var(self,dealer):
+        self.cur.execute("""SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio FROM Calculando WHERE ConcesionarioVW = (?)""",[dealer])
+        rows = self.cur.fetchall()
+        return rows
     
 
 
 app = Repository()
-app.export_to_power_bi_project()
+print(app.dealers_price_var('Alra'))
+# app.export_to_power_bi_project()
 # app.check_dealer_info()
     
 
