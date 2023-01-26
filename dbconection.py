@@ -5,9 +5,15 @@ import pandas as pd
 
 class Repository:
     def __init__(self) -> None:
-        self.con = sqlite3.connect('mercadlibre.db')
-        self.cur = self.con.cursor()
-        self.create_table()
+        try:
+            self.con = sqlite3.connect('mercadlibre.db')
+            self.cur = self.con.cursor()
+            self.create_table()
+        except Exception as e:
+            # Aca lo que hago es protegerme de algun error que suceda en la inicializacion de la conexion y la tabla
+            # Al print le pones un texto fijo como este y despues es mas facil buscar en los logs si el largo del texto es muy grande
+            # Al final del print estoy poniendo el contenido del error asi podes investigar que paso
+            print(f"[ERROR dbconnect]: {e}")
 
     def create_table(self):
         self.cur.execute("""CREATE TABLE IF NOT EXISTS pubs(
@@ -43,7 +49,7 @@ class Repository:
         rows = self.cur.fetchall()
         return rows
     
-    def get_empty_delaers(self):
+    def get_empty_dealers(self):
         self.cur.execute("""SELECT * FROM pubs WHERE dealer= "" or dealer IS NULL""")
         rows = self.cur.fetchall()
         return rows
