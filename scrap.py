@@ -28,7 +28,7 @@ class MeliPrecios:
         
     def validate_info(self,param):
         try:
-            param
+            print(param)
             return param
         except:
             return None
@@ -53,21 +53,25 @@ class MeliPrecios:
                 self.url = self.next_page()
             except:
                 pass
-            self.html = requests.get(self.url).text
-            self.soup = BeautifulSoup(self.html, 'html.parser')
+            if self.url is not None:
+                self.html = requests.get(self.url).text
+                self.soup = BeautifulSoup(self.html, 'html.parser')
         print("")
 
-    def save_items_in_repo(self):
-        repo = Repository()
-        for i in self.productos:
-            repo.insert_item(i)            
+    def save_items_in_repo(self, repo):
+        if repo:
+            for i in self.productos:
+                repo.insert_item(i)
 
 class MeliDealer(MeliPrecios):
     def __init__(self,id) -> None:
-        self.id = id
-        self.url = f"https://auto.mercadolibre.com.ar/MLA-{id}"
-        self.html = requests.get(self.url).text
-        self.soup = BeautifulSoup(self.html, 'html.parser')
+        try:
+            self.id = id
+            self.url = f"https://auto.mercadolibre.com.ar/MLA-{id}"
+            self.html = requests.get(self.url).text
+            self.soup = BeautifulSoup(self.html, 'html.parser')
+        except Exception as e:
+            print(f"[Error MeliDealer {id}] - {e}")
     
     def get_dealer(self):
         try:
