@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime
 import pandas as pd
 
+today = datetime.today().strftime('%Y/%m/%d')
 
 class Repository:
     def __init__(self) -> None:
@@ -71,15 +72,28 @@ class Repository:
 
         df.to_excel('/Users/dnogues/Library/CloudStorage/OneDrive-ESPASASA/Meli Precios/Meli2.xlsx')
 
-    def dealers_price_var(self,dealer):
-        self.cur.execute("""SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio FROM Calculando WHERE ConcesionarioVW = (?)""",[dealer])
+    def dealers_last_price(self,dealer):
+        self.cur.execute("""SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
+FROM Calculando 
+WHERE ConcesionarioVW = ? and Actualizacion < ? and orden > 0
+group by orden
+order by orden""",[dealer,today])
         rows = self.cur.fetchall()
         return rows
     
+    def dealers_new_price(self,dealer):
+        self.cur.execute("""SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
+FROM Calculando 
+WHERE ConcesionarioVW = ? and Actualizacion = ? and orden > 0
+group by orden
+order by orden""",[dealer,today])
+        rows = self.cur.fetchall()
+        return rows
 
 
-app = Repository()
-print(app.dealers_price_var('Alra'))
+#app = Repository()
+
+
 # app.export_to_power_bi_project()
 # app.check_dealer_info()
     
