@@ -4,11 +4,17 @@ import pandas as pd
 import requests
 import json
 
+
 class Notification:
     def __init__(self, dealer = 'Autotag') -> None:
         self.dealer = dealer
-        self.webhook = 'https://espasa.webhook.office.com/webhookb2/39e03f57-85a0-4b49-bace-b6775fe89544@0ba91077-8da0-4296-bda1-acb51af3361a/IncomingWebhook/776bb0f92d754d4d87a9e68b9055e36b/db304885-832d-4f8e-af0d-f2d9c2bdf311'
+        self.webhook = self.load_webhook()
         self.db = Repository()
+    
+    def load_webhook(self):
+        with open('private.json',"r") as info:
+            data = json.load(info)
+        return data['webhook']
 
     def post_dealer_price_info(self, dealer=""):
         if dealer != "":
