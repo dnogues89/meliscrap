@@ -4,12 +4,10 @@ import pandas as pd
 import requests
 import json
 
-webhook = 'https://espasa.webhook.office.com/webhookb2/39e03f57-85a0-4b49-bace-b6775fe89544@0ba91077-8da0-4296-bda1-acb51af3361a/IncomingWebhook/776bb0f92d754d4d87a9e68b9055e36b/db304885-832d-4f8e-af0d-f2d9c2bdf311'
-
 class Notification:
-    def __init__(self,webhook = webhook, dealer = 'Autotag') -> None:
+    def __init__(self, dealer = 'Autotag') -> None:
         self.dealer = dealer
-        self.webhook = webhook
+        self.webhook = 'https://espasa.webhook.office.com/webhookb2/39e03f57-85a0-4b49-bace-b6775fe89544@0ba91077-8da0-4296-bda1-acb51af3361a/IncomingWebhook/776bb0f92d754d4d87a9e68b9055e36b/db304885-832d-4f8e-af0d-f2d9c2bdf311'
         self.db = Repository()
 
     def post_dealer_price_info(self, dealer=""):
@@ -30,6 +28,6 @@ class Notification:
             }
 
             headers = {'Content-Type': 'application/json'}
-            requests.post(webhook, data=json.dumps(data), headers=headers)
+            requests.post(self.webhook, data=json.dumps(data), headers=headers)
 
-        r = requests.post(webhook,json.dumps(data),headers={'Content-Type':'application/json'})
+        r = requests.post(self.webhook,json.dumps(data),headers={'Content-Type':'application/json'})
