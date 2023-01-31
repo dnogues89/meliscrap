@@ -6,9 +6,7 @@ from vista import Visual
 
 list_of_models_to_scrap = ["Polo","Virtus","T-Cross","Nivus","Vento","Taos","Tiguan","Amarok"]
 
-# menu = Visual()
-# opcion = menu.menu()
-
+notificacion_dealers = ['Autotag','Alra','Hauswagen','Maynar']
 
 for model in list_of_models_to_scrap:
     app = MeliPrecios(model)
@@ -25,5 +23,7 @@ for i in tqdm(range(loops),desc="Buscando Dealer") :
 
 repo.export_to_power_bi_project()
 
-teams = Notification()
-teams.post_dealer_price_info()
+for i in notificacion_dealers:
+    teams = Notification(dealer=i)
+    teams.post_date()
+    teams.post_dealer_price_info()

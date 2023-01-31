@@ -3,10 +3,11 @@ from dbconection import Repository
 import pandas as pd
 import requests
 import json
+from datetime import datetime
 
 
 class Notification:
-    def __init__(self, dealer = 'Autotag') -> None:
+    def __init__(self, dealer = 'test') -> None:
         self.dealer = dealer
         self.webhook = self.load_webhook()
         self.db = Repository()
@@ -14,9 +15,9 @@ class Notification:
     def load_webhook(self):
         with open('private.json',"r") as info:
             data = json.load(info)
-        return data['webhook']
+        return data[self.dealer]
 
-    def dia_mes(self, text):
+    def _dia_mes(self, text):
         try:
             dia = text.split("/")[-1]
             mes = text.split("/")[1]
@@ -29,36 +30,49 @@ class Notification:
             return f"Bajo {text}%"
         return f'Subio {text}%'
 
-    def post_dealer_price_info(self, dealer=""):
-        if dealer != "":
-            self.dealer = dealer
+    def post_date(self):
+        today = datetime.today().strftime('%d/%m/%y')
+        card = {
+                "title": "Actualizaciones del {}".format(today),
+                "text": " "
+                
+            }
+        response = requests.post(self.webhook,json=card)
+        if response.status_code == 200:
+            print(f"Fecha")
+        else:
+            print(response.content)
+
+    def post_dealer_price_info(self):
+        if self.dealer == 'test':
+            self.dealer = 'Autotag'
         new_price = pd.DataFrame(data = self.db.dealers_new_price(self.dealer),columns=['Actualizacion','Orden',"familia",'desc','Publicaciones','new'])
         old_price = pd.DataFrame(data = self.db.dealers_last_price(self.dealer),columns=['Actualizacion','Orden',"familia",'desc','Publicaciones','old'])
         df = pd.merge(new_price,old_price,on='Orden')
         df['variacion'] = round((df['new'] - df['old']) / df['old'] * 100,1)
-        df = df[(df['variacion'] > 3) | (df['variacion'] < -3)]
+        df = df[(df['variacion'] > 2) | (df['variacion'] < -2)]
 
         df = df[['Orden','desc_x','new','variacion','old','Publicaciones_y','Publicaciones_x','Actualizacion_x','Actualizacion_y']]
 
         for i, row in df.iterrows():
             # data = {
             #     "title": "[{}] - {} {} un {}%".format(row['Orden'],row['desc_x'],self.subio_bajo(row['variacion']),row['variacion']),
-            #     "text": "{}: {} Pubs: {} \n{}: {} Pubs: {}".format(self.dia_mes(row['Actualizacion_y']),round(row['old']/1000000,3),row['Publicaciones_y'],self.dia_mes(row['Actualizacion_x']), round(row['new']/1000000,3),row['Publicaciones_x']),
+            #     "text": "{}: {} Pubs: {} \n{}: {} Pubs: {}".format(self._dia_mes(row['Actualizacion_y']),round(row['old']/1000000,3),row['Publicaciones_y'],self._dia_mes(row['Actualizacion_x']), round(row['new']/1000000,3),row['Publicaciones_x']),
                 
             # }
             data = {
     "title": "[{}] - {} ".format(row["Orden"],row['desc_x']),
-    "text": "{} - ${} - {}".format(self.subio_bajo(row["variacion"]),round(row['new']/1000000,2),row['Publicaciones_x']),
+    "text": "{} - ${} Mio - Pubs: {}".format(self.subio_bajo(row["variacion"]),round(row['new']/1000000,2),row['Publicaciones_x']),
     "sections": [
         {
             "activityTitle": "Detalles",
             "facts": [
                 {
-                    "name": "Fecha",
-                    "value": self.dia_mes(row['Actualizacion_y'])
+                    "name": "Fecha ultima Actualizacion",
+                    "value": self._dia_mes(row['Actualizacion_y'])
                 },
                 {
-                    "name": "Precio",
+                    "name": "Precio Anterior",
                     "value": "${} Mio".format(round(row['old']/1000000,2))
                 },
                 {
@@ -91,5 +105,6 @@ class Notification:
                 print(response.content)
 
 if "__main__" == __name__:
-    a = Notification()
-    a.post_dealer_price_info()
+    a = Notification("test")
+    a.post_date()
+    # a.post_dealer_price_info()
