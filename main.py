@@ -1,6 +1,7 @@
 from scrap import MeliPrecios,MeliDealer
 from tqdm import tqdm
 from dbconection import Repository
+from notifications import Notification
 from vista import Visual
 
 list_of_models_to_scrap = ["Polo","Virtus","T-Cross","Nivus","Vento","Taos","Tiguan","Amarok"]
@@ -16,10 +17,13 @@ for model in list_of_models_to_scrap:
 
 repo = Repository()
 repo.check_dealer_info()
-empty = repo.get_empty_delaers()
-loops = len(empty)
+empty_dealer_field_in_db = repo.get_empty_delaers()
+loops = len(empty_dealer_field_in_db)
 for i in tqdm(range(loops),desc="Buscando Dealer") :
-    app = MeliDealer(empty[i][1])
+    app = MeliDealer(empty_dealer_field_in_db[i][1])
     app.update_dealer()
 
 repo.export_to_power_bi_project()
+
+teams = Notification()
+teams.post_dealer_price_info()
