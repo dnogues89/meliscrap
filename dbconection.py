@@ -75,7 +75,7 @@ class Repository:
     def dealers_last_price(self,dealer):
         self.cur.execute("""SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
 FROM Calculando 
-WHERE ConcesionarioVW = ? and Actualizacion < ? and orden > 0
+WHERE ConcesionarioVW = ? and Actualizacion < ? and orden > 0 and Publicaciones > 3
 group by orden
 order by orden""",[dealer,today])
         rows = self.cur.fetchall()
@@ -84,29 +84,18 @@ order by orden""",[dealer,today])
     def dealers_new_price(self,dealer):
         self.cur.execute("""SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
 FROM Calculando 
-WHERE ConcesionarioVW = ? and Actualizacion = ? and orden > 0
+WHERE ConcesionarioVW = ? and Actualizacion = ? and orden > 0 and Publicaciones > 3
 group by orden
 order by orden""",[dealer,today])
         rows = self.cur.fetchall()
         return rows
 
 
-#app = Repository()
+if "__main__" == __name__:
+
+    app = Repository()
+    data = app.dealers_new_price('Autotag')
+    print(data)
 
 
-# app.export_to_power_bi_project()
-# app.check_dealer_info()
-    
 
-# today = datetime.today().strftime('%d-%m-%y')
-# id = 1234
-# titulo = 'Amarok'
-# precio = 4000000
-# crm = 'Amarok 2.0'
-# url = 'https://hola.com'
-# dealer = ""
-# asd = (today,id,titulo,precio,crm,url,dealer)
-# data = Repository()
-# data.insert_item(asd)
-# info = data.get_empty_delaers()
-# print(info[0][1])

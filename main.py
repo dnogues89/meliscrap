@@ -25,5 +25,4 @@ repo.export_to_power_bi_project()
 
 for i in notificacion_dealers:
     teams = Notification(dealer=i)
-    teams.post_date()
     teams.post_dealer_price_info()

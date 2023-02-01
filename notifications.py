@@ -43,7 +43,7 @@ class Notification:
         else:
             print(response.content)
 
-    def post_dealer_price_info(self):
+    def get_prices_by_dealer(self):
         if self.dealer == 'test':
             self.dealer = 'Autotag'
         new_price = pd.DataFrame(data = self.db.dealers_new_price(self.dealer),columns=['Actualizacion','Orden',"familia",'desc','Publicaciones','new'])
@@ -53,13 +53,12 @@ class Notification:
         df = df[(df['variacion'] > 2) | (df['variacion'] < -2)]
 
         df = df[['Orden','desc_x','new','variacion','old','Publicaciones_y','Publicaciones_x','Actualizacion_x','Actualizacion_y']]
+        return df
 
+    def post_dealer_price_info(self):
+        self.post_date()
+        df = self.get_prices_by_dealer()
         for i, row in df.iterrows():
-            # data = {
-            #     "title": "[{}] - {} {} un {}%".format(row['Orden'],row['desc_x'],self.subio_bajo(row['variacion']),row['variacion']),
-            #     "text": "{}: {} Pubs: {} \n{}: {} Pubs: {}".format(self._dia_mes(row['Actualizacion_y']),round(row['old']/1000000,3),row['Publicaciones_y'],self._dia_mes(row['Actualizacion_x']), round(row['new']/1000000,3),row['Publicaciones_x']),
-                
-            # }
             data = {
     "title": "[{}] - {} ".format(row["Orden"],row['desc_x']),
     "text": "{} - ${} Mio - Pubs: {}".format(self.subio_bajo(row["variacion"]),round(row['new']/1000000,2),row['Publicaciones_x']),
@@ -81,7 +80,7 @@ class Notification:
                 },
                 {
                     "name": "Diferencia",
-                    "value": "${:,}".format(row['new']-row['old'])
+                    "value": "${:,}".format(round(row['new']-row['old']))
                 }
             ]
         }
@@ -105,6 +104,5 @@ class Notification:
                 print(response.content)
 
 if "__main__" == __name__:
-    a = Notification("test")
-    a.post_date()
-    # a.post_dealer_price_info()
+    a = Notification("Alra")
+    print(a.get_prices_by_dealer())
