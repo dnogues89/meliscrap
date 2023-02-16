@@ -91,9 +91,11 @@ class Notification:
     "@context": "http://schema.org/extensions",
     "summary": "Resumen de la tarjeta",
     "themeColor": "0078D7",
+    "fontType": "Monospace",
     "title": data['title'],
     "text": data['text'],
     "sections": data['sections']
+
 }
 
             # r = requests.post(self.webhook,json.dumps(card),headers={'Content-Type':'application/json'})
@@ -104,5 +106,5 @@ class Notification:
                 print(response.content)
 
 if "__main__" == __name__:
-    a = Notification("Alra")
-    print(a.get_prices_by_dealer())
+    a = Notification("test")
+    print(a.post_dealer_price_info())
