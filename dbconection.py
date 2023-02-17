@@ -1,8 +1,11 @@
 import sqlite3
-from datetime import datetime
+from datetime import datetime , timedelta
 import pandas as pd
+from espasadb import EspasaDataBase
 
 today = datetime.today().strftime('%Y/%m/%d')
+tree_days_before = datetime.today()-timedelta(days=3)
+tree_days_before.strftime('%Y/%m/%d')
 
 class Repository:
     def __init__(self) -> None:
@@ -90,12 +93,58 @@ order by orden""",[dealer,today])
         rows = self.cur.fetchall()
         return rows
 
+    def update_precios_y_stock(self):
+        #Init
+        espasadb = EspasaDataBase()
+        data = espasadb.get_precios_y_stock()
+        for i in data:
+            id = i[0]
+            row = list(i[1:])
+            row.append(i[0])
+            self.cur.execute(
+                """
+                UPDATE precios_y_stock
+                SET modelo_base =?, familia =?, precio_lista=?, imp_int =?,precio_tx=?, stock=?, ofertas=?,oferta_min=?, oferta_max=?, aa_pasado=?, aa_actual=?, trad_pasado=?, trad_actual=?
+                WHERE orden = ?
+                """,row
+            )
+            self.con.commit()
+    
+    def get_pauta_actual(self,dealer):
+        self.cur.execute(
+            """
+SELECT ConcesionarioVW,
+       final_para_power_bi.orden,
+       precios_y_stock.familia,
+       precios_y_stock.modelo_base,
+       count( * ) AS Publicaciones,
+       ROUND(avg(precio)/1000000,2) as Precio,
+       ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) AS Pauta,
+       ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2) as pauta_Espasa,
+       precios_y_stock.ofertas as ofertas,
+       ROUND(((precios_y_stock.oferta_max*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2) as pauta_ofertas,
+       precios_y_stock.stock,
+       ROUND(ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) - ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2),2) as dif_pautas
+FROM final_para_power_bi
+LEFT JOIN
+       precios_y_stock ON final_para_power_bi.Orden = precios_y_stock.orden
+WHERE Actualizacion > ? and ConcesionarioVW = ? and final_para_power_bi.orden > 1
+GROUP BY ConcesionarioVW,
+        final_para_power_bi.orden
+ORDER BY final_para_power_bi.orden ASC;
+
+            """,[tree_days_before,dealer]
+        )
+        rows = self.cur.fetchall()
+        columns = [descripcion[0] for descripcion in self.cur.description]
+        return columns,rows
+
+
 
 if "__main__" == __name__:
 
     app = Repository()
-    data = app.dealers_new_price('Autotag')
-    print(data)
+    print(app.get_pauta_actual('Autotag'))
 
 
 

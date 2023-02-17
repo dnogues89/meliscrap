@@ -162,3 +162,4 @@ cython_debug/
 /pbi_api
 config.ini
 espasadb.py
+reporte.pdf
