@@ -3,15 +3,16 @@ from datetime import datetime , timedelta
 import pandas as pd
 from espasadb import EspasaDataBase
 
-today = datetime.today().strftime('%Y/%m/%d')
-tree_days_before = datetime.today()-timedelta(days=3)
-tree_days_before.strftime('%Y/%m/%d')
+
 
 class Repository:
     def __init__(self) -> None:
         self.con = sqlite3.connect('mercadlibre.db')
         self.cur = self.con.cursor()
         self.create_table()
+        self.today = datetime.today().strftime('%Y/%m/%d')
+        tree_days_before = datetime.today()-timedelta(days=3)
+        self.tree_days_before=tree_days_before.strftime('%Y/%m/%d')
 
     def create_table(self):
         self.cur.execute("""CREATE TABLE IF NOT EXISTS pubs(
@@ -137,7 +138,7 @@ GROUP BY ConcesionarioVW,
         final_para_power_bi.orden
 ORDER BY final_para_power_bi.orden ASC;
 
-            """,[tree_days_before,dealer]
+            """,[self.tree_days_before,dealer]
         )
         rows = self.cur.fetchall()
         columns = [descripcion[0] for descripcion in self.cur.description]

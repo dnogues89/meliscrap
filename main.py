@@ -37,3 +37,4 @@ for i in notificacion_dealers:
     pdf= CreatePdfs(data,i)
     pdf.create_table(True)
     pdf.save()
+    
