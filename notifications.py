@@ -39,7 +39,7 @@ class Notification:
             }
         response = requests.post(self.webhook,json=card)
         if response.status_code == 200:
-            print(f"Fecha")
+            print(f"Fecha {today}")
         else:
             print(response.content)
 
@@ -56,8 +56,10 @@ class Notification:
         return df
 
     def post_dealer_price_info(self):
-        self.post_date()
+
         df = self.get_prices_by_dealer()
+        if len(df)>0:
+            self.post_date()
         for i, row in df.iterrows():
             data = {
     "title": "[{}] - {} ".format(row["Orden"],row['desc_x']),

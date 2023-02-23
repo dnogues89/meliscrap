@@ -3,6 +3,7 @@ from tqdm import tqdm
 from dbconection import Repository
 from notifications import Notification
 from vista import Visual
+from create_pdf import CreatePdfs
 
 list_of_models_to_scrap = ["Polo","Virtus","T-Cross","Nivus","Vento","Taos","Tiguan","Amarok"]
 
@@ -24,5 +25,15 @@ for i in tqdm(range(loops),desc="Buscando Dealer") :
 repo.export_to_power_bi_project()
 
 for i in notificacion_dealers:
+    #Notificaciones para teams
     teams = Notification(dealer=i)
     teams.post_dealer_price_info()
+
+    #Crear pdf
+    header,data = repo.get_pauta_actual(i)
+    data.insert(0,header)
+    pre_header = ["","","","","a","b","c","d","e","f","(c-d)","g","h","i"]
+    data.insert(0,pre_header)
+    pdf= CreatePdfs(data,i)
+    pdf.create_table(True)
+    pdf.save()

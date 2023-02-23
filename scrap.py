@@ -36,8 +36,8 @@ class MeliPrecios:
     def get_page_products(self):
       
         for producto in self.soup.find_all(class_="ui-search-result__wrapper shops__result-wrapper"):
-            titulo = self.validate_info(producto.find(class_='ui-search-item__title ui-search-item__group__element shops__items-group-details shops__item-title').text)
-            url = self.validate_info(producto.find(class_='ui-search-result__content ui-search-link')['href'])
+            titulo = self.validate_info(producto.find(class_='ui-search-item__title shops__item-title').text)
+            url = self.validate_info(producto.find(class_='ui-search-item__group__element shops__items-group-details ui-search-link')['href'])
             precio = self.validate_info(int(producto.find(class_='price-tag-fraction').text.replace(".","")))
             id_pub = self.validate_info(url.split("MLA-")[1].split("-")[0])
             decode = Decoder(titulo,url)
@@ -81,13 +81,6 @@ class MeliDealer(MeliPrecios):
         data = (self.get_dealer(),self.id)
         repo.update_dealer_info(data)
 
-# polo = MeliDealer(1315650729)
-# print(polo.update_dealer())
-
-# polo.save_items_in_repo()
-
-# data = [(product.titulo, product.precio, product.id_pub, product.url) for product in polo.productos]
-
-# df = pd.DataFrame(data,columns=['Titulo','Precio','Id','Url'])
-
-# df.to_csv("Prueba.csv")
+if '__main__' == __name__:
+    app = MeliPrecios('Amarok')
+    app.get_all()

@@ -111,20 +111,24 @@ order by orden""",[dealer,today])
             self.con.commit()
     
     def get_pauta_actual(self,dealer):
+        self.update_precios_y_stock()
         self.cur.execute(
             """
 SELECT ConcesionarioVW,
        final_para_power_bi.orden,
        precios_y_stock.familia,
        precios_y_stock.modelo_base,
-       count( * ) AS Publicaciones,
+       count( * ) AS Pubs,
        ROUND(avg(precio)/1000000,2) as Precio,
        ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) AS Pauta,
-       ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2) as pauta_Espasa,
+       ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2) as P_Esp,
        precios_y_stock.ofertas as ofertas,
-       ROUND(((precios_y_stock.oferta_max*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2) as pauta_ofertas,
-       precios_y_stock.stock,
-       ROUND(ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) - ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2),2) as dif_pautas
+       COALESCE(ROUND(((precios_y_stock.oferta_max*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2),0) as P_Of,
+       ROUND(ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) - ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2),2) as P_Dif,
+        precios_y_stock.stock,
+       COALESCE(precios_y_stock.aa_actual + precios_y_stock.trad_actual,0) as Vts_m0,
+       COALESCE(precios_y_stock.aa_pasado + precios_y_stock.trad_pasado,0) as Vts_m1
+
 FROM final_para_power_bi
 LEFT JOIN
        precios_y_stock ON final_para_power_bi.Orden = precios_y_stock.orden
