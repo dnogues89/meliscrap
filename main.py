@@ -32,7 +32,7 @@ for i in notificacion_dealers:
     #Crear pdf
     header,data = repo.get_pauta_actual(i)
     data.insert(0,header)
-    pre_header = ["","","","","a","b","c","d","e","f","(c-d)","g","h","i"]
+    pre_header = ["","","","","a","b Mio","c %","d %","e","f %","(c-d)%","g","h","i"]
     data.insert(0,pre_header)
     pdf= CreatePdfs(data,i)
     pdf.create_table(True)

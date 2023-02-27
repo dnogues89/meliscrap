@@ -87,6 +87,31 @@ class CreatePdfs:
             else:
                 self.pdf.cell(self.column_widths[j]+6, 6, str(self.data[row][j]), 1, 0, 'C', True)
         self.pdf.ln()
+    
+    def notes_end_page(self):
+        self.pdf.ln()
+        self.pdf.ln()
+
+        self.pdf.set_fill_color(255,255,255)
+        self.pdf.set_text_color(0,0,0)
+        self.pdf.set_font('Helvetica', 'I', 5)
+        self.pdf.set_fill_color(255,255,255) # Blanco   
+        self.pdf.cell(5, 4, 'Pautas negativas significa debajo de precio lista', 0, 0, 'L', True)
+        self.pdf.ln()
+        self.pdf.cell(5, 4, 'Pautas positivas significa encima de precio lista', 0, 0, 'L', True)
+        self.pdf.ln()
+        self.pdf.cell(10, 4, '* Columna P_Dif diferencia de pautas, sin tener en cuenta precio de oferta (si existiera)', 0, 0, 'L', True)  
+        self.pdf.ln()
+        self.pdf.set_fill_color(167,244,167) # Si somos mas Baratos Verde
+        # self.pdf.set_text_color(4,109,4)
+        self.pdf.cell(5, 4, '     - Somos mas baratos', 0, 0, 'L', True)  
+        self.pdf.ln()
+        self.pdf.set_fill_color(244,167,167) # Si somos mas Caros Rojo
+        # self.pdf.set_text_color(109,4,4)
+        self.pdf.cell(5, 4, '     - Somos mas caros', 0, 0, 'L', True)  
+        self.pdf.ln()  
+
+
 
     def create_table(self,preheader:bool):
         if preheader == True:
@@ -98,14 +123,14 @@ class CreatePdfs:
             self.add_table_header(0)
             for i in range(1,len(self.data)):
                 self.add_table_line(i)
-
+        self.notes_end_page()
 
 if "__main__" == __name__:
 
     repo = Repository()
     header , data = repo.get_pauta_actual('Autotag')
     data.insert(0,header)
-    pre_header = ["","","","","a","b","c","d","e","f","(c-d)","g","h","i"]
+    pre_header = ["","","","","a","b Mio","c %","d %","e","f %","(c-d)%","g","h","i"]
     data.insert(0,pre_header)
 
     pdf = CreatePdfs(data,"Autotag")
