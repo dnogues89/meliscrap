@@ -35,6 +35,12 @@ for i in notificacion_dealers:
     pre_header = ["","","","","a","b Mio","c %","d %","e","f %","(c-d)%","g","h","i"]
     data.insert(0,pre_header)
     pdf= CreatePdfs(data,i)
-    pdf.create_table(True)
+    pdf.create_table(True,True)
+    pdf.add_new_page()
+    header,data = repo.get_pubs(i)
+    data.insert(0,header)
+    pdf.data = data
+    pdf.calculate_with()
+    pdf.create_table(False,False)
     pdf.save()
     

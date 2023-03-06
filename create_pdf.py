@@ -71,13 +71,15 @@ class CreatePdfs:
             self.pdf.set_fill_color(226,226,226) #Color para las columnas impares
 
         if cell == 10: # la celda 11 contiene la diferencia de precios cambiar si hace falta
-            if self.data[row][cell] > 3:
-                self.pdf.set_fill_color(167,244,167) # Si somos mas Baratos Verde
-                self.pdf.set_text_color(4,109,4)
-            if self.data[row][cell] < -3:
-                self.pdf.set_fill_color(244,167,167) # Si somos mas Caros Rojo
-                self.pdf.set_text_color(109,4,4)
-
+            try:
+                if self.data[row][cell] > 3:
+                    self.pdf.set_fill_color(167,244,167) # Si somos mas Baratos Verde
+                    self.pdf.set_text_color(4,109,4)
+                if self.data[row][cell] < -3:
+                    self.pdf.set_fill_color(244,167,167) # Si somos mas Caros Rojo
+                    self.pdf.set_text_color(109,4,4)
+            except:
+                pass
 
     def add_table_line(self,row):
         for j in range(len(self.data[row])):
@@ -111,9 +113,10 @@ class CreatePdfs:
         self.pdf.cell(5, 4, '     - Somos mas caros', 0, 0, 'L', True)  
         self.pdf.ln()  
 
+    def add_new_page(self):
+        self.pdf.add_page()
 
-
-    def create_table(self,preheader:bool):
+    def create_table(self,preheader:bool,notes:bool):
         if preheader == True:
             self.add_table_pre_header(0)
             self.add_table_header(1)
@@ -123,7 +126,8 @@ class CreatePdfs:
             self.add_table_header(0)
             for i in range(1,len(self.data)):
                 self.add_table_line(i)
-        self.notes_end_page()
+        if notes == True:
+            self.notes_end_page()
 
 if "__main__" == __name__:
 
@@ -135,5 +139,13 @@ if "__main__" == __name__:
 
     pdf = CreatePdfs(data,"Autotag")
     print(data[4])
-    pdf.create_table(True)
+    pdf.create_table(True,True)
+    pdf.add_new_page()
+    header,data = repo.get_pubs('Autotag')
+    data.insert(0,header)
+    pdf.data = data
+    pdf.calculate_with()
+    pdf.create_table(False,False)
     pdf.save("prueba")
+
+

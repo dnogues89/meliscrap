@@ -77,20 +77,24 @@ class Repository:
         df.to_excel('/Users/dnogues/Library/CloudStorage/OneDrive-ESPASASA/Meli Precios/Meli2.xlsx')
 
     def dealers_last_price(self,dealer):
-        self.cur.execute("""SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
-FROM Calculando 
-WHERE ConcesionarioVW = ? and Actualizacion < ? and orden > 0 and Publicaciones > 3
-group by orden
-order by orden""",[dealer,self.today])
+        self.cur.execute("""
+        SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
+        FROM Calculando 
+        WHERE ConcesionarioVW = ? and Actualizacion < ? and orden > 0 and Publicaciones > 3
+        group by orden
+        order by orden""",
+        [dealer,self.today])
         rows = self.cur.fetchall()
         return rows
     
     def dealers_new_price(self,dealer):
-        self.cur.execute("""SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
-FROM Calculando 
-WHERE ConcesionarioVW = ? and Actualizacion = ? and orden > 0 and Publicaciones > 3
-group by orden
-order by orden""",[dealer,self.today])
+        self.cur.execute("""
+        SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
+        FROM Calculando 
+        WHERE ConcesionarioVW = ? and Actualizacion = ? and orden > 0 and Publicaciones > 3
+        group by orden
+        order by orden""",
+        [dealer,self.today])
         rows = self.cur.fetchall()
         return rows
 
@@ -99,6 +103,10 @@ order by orden""",[dealer,self.today])
         espasadb = EspasaDataBase()
         data = espasadb.get_precios_y_stock()
         for i in data:
+            if i[8] != None:
+                i[8] = int(i[8])
+            if i[9] != None:
+                i[9] = int(i[9])
             id = i[0]
             row = list(i[1:])
             row.append(i[0])
@@ -109,6 +117,7 @@ order by orden""",[dealer,self.today])
                 WHERE orden = ?
                 """,row
             )
+            print(row)
             self.con.commit()
     
     def get_pauta_actual(self,dealer):
@@ -143,14 +152,25 @@ ORDER BY final_para_power_bi.orden ASC;
         rows = self.cur.fetchall()
         columns = [descripcion[0] for descripcion in self.cur.description]
         return columns,rows
+    
+    def get_pubs(self,dealer):
+        self.cur.execute("""
+        select Actualizacion, precios_y_stock.orden as Orden, precios_y_stock.familia as Familia,precios_y_stock.modelo_base as Modelo, ROUND(((precio*1.000000001-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) AS Pauta, url
+        from final_para_power_bi
+        INNER JOIN precios_y_stock on final_para_power_bi.Orden = precios_y_stock.orden
+        WHERE ConcesionarioVW = ? and Actualizacion = ?
+        order BY precios_y_stock.orden, Pauta""",
+        [dealer,self.today])
+        rows = self.cur.fetchall()
+        columns = [descripcion[0] for descripcion in self.cur.description]
+        return columns,rows
 
 
 
 if "__main__" == __name__:
 
     app = Repository()
-    print(app.get_pauta_actual('Autotag'))
-    app.update_precios_y_stock()
+    print(app.get_pubs('Espasa'))
 
 
 
