@@ -2,6 +2,7 @@ import sqlite3
 from datetime import datetime , timedelta
 import pandas as pd
 from espasadb import EspasaDataBase
+from models import Decoder
 
 
 
@@ -55,6 +56,10 @@ class Repository:
     
     def update_dealer_info(self,data):
         self.cur.execute("""UPDATE pubs SET dealer = ? WHERE id = ?""",data)
+        self.con.commit()
+
+    def update_credit_info(self,data):
+        self.cur.execute("""UPDATE pubs SET credit = ? WHERE id = ?""",data)
         self.con.commit()
 
     def update_desc_crm(self,data):
@@ -117,7 +122,6 @@ class Repository:
                 WHERE orden = ?
                 """,row
             )
-            print(row)
             self.con.commit()
     
     def get_pauta_actual(self,dealer):
@@ -168,9 +172,9 @@ ORDER BY final_para_power_bi.orden ASC;
 
 
 if "__main__" == __name__:
+    pass
 
-    app = Repository()
-    print(app.get_pubs('Espasa'))
+
 
 
 

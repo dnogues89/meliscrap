@@ -16,6 +16,7 @@ class MeliPrecios:
         self.html = requests.get(self.url).text
         self.soup = BeautifulSoup(self.html, 'html.parser')
         self.productos = []
+        self.repo = Repository()
 
     def total_pages(self):
         try:
@@ -58,9 +59,9 @@ class MeliPrecios:
         print("")
 
     def save_items_in_repo(self):
-        repo = Repository()
+
         for i in self.productos:
-            repo.insert_item(i)            
+            self.repo.insert_item(i)            
 
 class MeliDealer(MeliPrecios):
     def __init__(self,id) -> None:
@@ -68,6 +69,8 @@ class MeliDealer(MeliPrecios):
         self.url = f"https://auto.mercadolibre.com.ar/MLA-{id}"
         self.html = requests.get(self.url).text
         self.soup = BeautifulSoup(self.html, 'html.parser')
+        self.repo = Repository()
+        self.credit_list = ["anticipo:","anticipo"]
     
     def get_dealer(self):
         try:
@@ -77,10 +80,24 @@ class MeliDealer(MeliPrecios):
             return None
 
     def update_dealer(self):
-        repo=Repository()
         data = (self.get_dealer(),self.id)
-        repo.update_dealer_info(data)
+        self.repo.update_dealer_info(data)
+
+    def get_credit(self):
+        try:
+            credit = self.soup.find(class_='ui-pdp-description__content').text.lower()
+            for i in self.credit_list:
+                if i.lower() in credit:
+                    return 'Credito'
+        except:
+            return None
+    
+    def update_credit_info(self):
+        data = (self.get_credit(),self.id)
+        self.repo.update_credit_info(data)
+
+        
 
 if '__main__' == __name__:
-    app = MeliPrecios('Amarok')
-    app.get_all()
+    app = MeliDealer(1366207772)
+    app.update_credit_info()

@@ -11,7 +11,7 @@ class Decoder:
 
 
     def decode_pubs(self):
-        texto = f'{self.titulo} {self.url.replace("-"," ")}'.lower().replace("confortline",'comfortline').replace(',',".").replace('3.0','v6').replace('starline','trendline').replace('startline','trendline').replace("t cross","t-cross").replace('manual','mt').replace('automatica','at').replace('automatico','at').replace('aut','at').replace('man','mt')
+        texto = f'{self.titulo} {self.url.replace("-"," ")}'.lower().replace("confortline",'comfortline').replace(',',".").replace('3.0','v6').replace('starline','trendline').replace('startline','trendline').replace("t cross","t-cross").replace('manual','mt').replace('automatica','at').replace('automatico','at').replace('man','mt')
         familias = ["Polo","Virtus","T-Cross","Nivus","Vento","Taos","Tiguan","Saveiro","Amarok"]
         versiones = ["Trendline", "Comfortline","Highline","Hero","Extreme"]
         motor = ['2.0','V6']

@@ -132,20 +132,20 @@ class CreatePdfs:
 if "__main__" == __name__:
 
     repo = Repository()
-    header , data = repo.get_pauta_actual('Autotag')
+    header , data = repo.get_pauta_actual('Espasa')
     data.insert(0,header)
     pre_header = ["","","","","a","b Mio","c %","d %","e","f %","(c-d)%","g","h","i"]
     data.insert(0,pre_header)
 
-    pdf = CreatePdfs(data,"Autotag")
+    pdf = CreatePdfs(data,"Espasa")
     print(data[4])
     pdf.create_table(True,True)
     pdf.add_new_page()
-    header,data = repo.get_pubs('Autotag')
+    header,data = repo.get_pubs('Espasa')
     data.insert(0,header)
     pdf.data = data
     pdf.calculate_with()
     pdf.create_table(False,False)
-    pdf.save("prueba")
+    pdf.save()
 
 
