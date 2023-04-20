@@ -37,8 +37,8 @@ class MeliPrecios:
     def get_page_products(self):
       
         for producto in self.soup.find_all(class_="ui-search-result__wrapper shops__result-wrapper"):
-            titulo = self.validate_info(producto.find(class_='ui-search-item__title ui-search-item__group__element shops__items-group-details shops__item-title').text)
-            url = self.validate_info(producto.find(class_='ui-search-result__content ui-search-link')['href'])
+            titulo = self.validate_info(producto.find(class_='ui-search-item__title shops__item-title').text)
+            url = self.validate_info(producto.find(class_='ui-search-item__group__element shops__items-group-details ui-search-link')['href'])
             precio = self.validate_info(int(producto.find(class_='price-tag-fraction').text.replace(".","")))
             id_pub = self.validate_info(url.split("MLA-")[1].split("-")[0])
             decode = Decoder(titulo,url)

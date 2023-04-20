@@ -164,3 +164,4 @@ config.ini
 espasadb.py
 reporte.pdf
 prueba_pdf.py
+parse_stock_siomaa.py

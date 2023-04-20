@@ -4,16 +4,30 @@ import pandas as pd
 from espasadb import EspasaDataBase
 from models import Decoder
 
-
-
 class Repository:
     def __init__(self) -> None:
         self.con = sqlite3.connect('mercadlibre.db')
         self.cur = self.con.cursor()
         self.create_table()
+        self.create_stock_table()
         self.today = datetime.today().strftime('%Y/%m/%d')
         tree_days_before = datetime.today()-timedelta(days=3)
         self.tree_days_before=tree_days_before.strftime('%Y/%m/%d')
+    
+    def create_stock_table(self):
+        self.cur.execute("""
+        CREATE TABLE IF NOT EXISTS stock_siomaa(
+        date DATE,
+        modelo TEXT,
+        stock_red INTEGER,
+        PRIMARY KEY (date,modelo))
+        """)
+
+    def insert_stock(self,item):
+        self.cur.execute("""
+        INSERT OR IGNORE INTO stock_siomaa VALUES(?,?,?)
+        """,item)
+        self.con.commit()
 
     def create_table(self):
         self.cur.execute("""CREATE TABLE IF NOT EXISTS pubs(
@@ -74,7 +88,7 @@ class Repository:
             self.update_dealer_info(data)
 
     def export_to_power_bi_project(self):
-        self.cur.execute("""SELECT * FROM final_para_power_bi;""")
+        self.cur.execute("""SELECT url,Precio,Actualizacion,Orden,ConcesionarioVW FROM final_para_power_bi;""")
         data = self.cur.fetchall()
 
         df = pd.DataFrame(data=data, columns=['url','Precio','Actualizacion','Orden','Concesionario VW'])
@@ -83,7 +97,7 @@ class Repository:
 
     def dealers_last_price(self,dealer):
         self.cur.execute("""
-        SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
+        SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio,Pauta 
         FROM Calculando 
         WHERE ConcesionarioVW = ? and Actualizacion < ? and orden > 0 and Publicaciones > 3
         group by orden
@@ -94,7 +108,7 @@ class Repository:
     
     def dealers_new_price(self,dealer):
         self.cur.execute("""
-        SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio 
+        SELECT Actualizacion,Orden,familia,desc,Publicaciones,precio_promedio,Pauta 
         FROM Calculando 
         WHERE ConcesionarioVW = ? and Actualizacion = ? and orden > 0 and Publicaciones > 3
         group by orden
@@ -113,14 +127,28 @@ class Repository:
             if i[9] != None:
                 i[9] = int(i[9])
             id = i[0]
-            row = list(i[1:])
-            row.append(i[0])
+            #row = list(i[1:])
+            #row.append(i[0])
             self.cur.execute(
                 """
-                UPDATE precios_y_stock
-                SET modelo_base =?, familia =?, precio_lista=?, imp_int =?,precio_tx=?, stock=?, ofertas=?,oferta_min=?, oferta_max=?, aa_pasado=?, aa_actual=?, trad_pasado=?, trad_actual=?
-                WHERE orden = ?
-                """,row
+            INSERT INTO precios_y_stock (orden, modelo_base, familia, precio_lista, imp_int, precio_tx, stock, ofertas, oferta_min, oferta_max, aa_pasado, aa_actual, trad_pasado, trad_actual)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ON CONFLICT (orden)
+            DO UPDATE SET
+            modelo_base = EXCLUDED.modelo_base,
+            familia = EXCLUDED.familia,
+            precio_lista = EXCLUDED.precio_lista,
+            imp_int = EXCLUDED.imp_int,
+            precio_tx = EXCLUDED.precio_tx,
+            stock = EXCLUDED.stock,
+            ofertas = EXCLUDED.ofertas,
+            oferta_min = EXCLUDED.oferta_min,
+            oferta_max = EXCLUDED.oferta_max,
+            aa_pasado = EXCLUDED.aa_pasado,
+            aa_actual = EXCLUDED.aa_actual,
+            trad_pasado = EXCLUDED.trad_pasado,
+            trad_actual = EXCLUDED.trad_actual;
+                """,i
             )
             self.con.commit()
     
@@ -128,7 +156,7 @@ class Repository:
         self.update_precios_y_stock()
         self.cur.execute(
             """
-SELECT ConcesionarioVW,
+SELECT ConcesionarioVW as Dealer,
        final_para_power_bi.orden,
        precios_y_stock.familia,
        precios_y_stock.modelo_base,
@@ -138,10 +166,11 @@ SELECT ConcesionarioVW,
        ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2) as P_Esp,
        precios_y_stock.ofertas as Ofertas,
        COALESCE(ROUND(((precios_y_stock.oferta_max*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2),0) as P_Of,
-       ROUND(ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) - ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2),2) as P_Dif,
+       CASE WHEN precios_y_stock.ofertas = 0 THEN ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) - ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2) ELSE ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) - ROUND(((precios_y_stock.oferta_max*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2) END as P_Dif,
         precios_y_stock.Stock,
        COALESCE(precios_y_stock.aa_actual + precios_y_stock.trad_actual,0) as Vts_n,
-       COALESCE(precios_y_stock.aa_pasado + precios_y_stock.trad_pasado,0) as 'Vts_n-1'
+       COALESCE(precios_y_stock.aa_pasado + precios_y_stock.trad_pasado,0) as 'Vts_n-1',
+       siomaa
 
 FROM final_para_power_bi
 LEFT JOIN
@@ -156,6 +185,36 @@ ORDER BY final_para_power_bi.orden ASC;
         rows = self.cur.fetchall()
         columns = [descripcion[0] for descripcion in self.cur.description]
         return columns,rows
+
+    def get_pauta_actual_by_model(self):
+        self.cur.execute(
+        """
+        SELECT 
+        ROW_NUMBER() OVER(ORDER BY final_para_power_bi.orden) AS 'Index',
+        final_para_power_bi.orden,
+       precios_y_stock.familia,
+       precios_y_stock.modelo_base,
+       count( * ) AS Pubs,
+       ROUND(avg(precio)/1000000,2) as Precio,
+       ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) AS Pauta,
+       ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2) as P_Esp,
+       precios_y_stock.ofertas as Ofertas,
+       COALESCE(ROUND(((precios_y_stock.oferta_max*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2),0) as P_Of,
+       ROUND(ROUND(((AVG(precio)-precios_y_stock.imp_int)/(precios_y_stock.precio_lista-precios_y_stock.imp_int)-1)*100,2) - ROUND(((precios_y_stock.precio_tx*1.0000000001 - precios_y_stock.imp_int)/(precios_y_stock.precio_lista - precios_y_stock.imp_int)-1)*100,2),2) as P_Dif,
+        precios_y_stock.Stock,
+       COALESCE(precios_y_stock.trad_actual,0) as Vts_n,
+       COALESCE(precios_y_stock.trad_pasado,0) as 'Vts_n-1',
+       siomaa
+       
+  FROM final_para_power_bi
+  LEFT JOIN
+       precios_y_stock ON final_para_power_bi.Orden = precios_y_stock.orden
+  Where Actualizacion > ? and final_para_power_bi.orden not like 0 and final_para_power_bi.ConcesionarioVW != 'Reventa'
+  GROUP BY final_para_power_bi.orden
+ORDER BY final_para_power_bi.orden ASC;""",[self.tree_days_before])
+        rows = self.cur.fetchall()
+        columns = [descripcion[0] for descripcion in self.cur.description]
+        return columns,rows 
     
     def get_pubs(self,dealer):
         self.cur.execute("""
@@ -168,13 +227,32 @@ ORDER BY final_para_power_bi.orden ASC;
         rows = self.cur.fetchall()
         columns = [descripcion[0] for descripcion in self.cur.description]
         return columns,rows
+    
+    def get_fecha_stock_siomaa(self):
+        self.cur.execute("""
+        SELECT date, precios_y_stock.orden, final_siomaa_stock.stock_red
+from precios_y_stock
+left join final_siomaa_stock on final_siomaa_stock.orden = precios_y_stock.orden
+
+where date is not null
+group by precios_y_stock.orden;
+        """)
+        rows = self.cur.fetchall()
+        return rows
 
 
 
 if "__main__" == __name__:
-    pass
+    app = Repository()
+    # data = (app.today,'amarok',12)
+    # app.insert_stock(data)
+    print(app.get_fecha_stock_siomaa()[0][0])
 
-
-
-
+    db = app.cur.execute("select * from pubs").fetchall()
+    for i in db:
+        crm = Decoder(i[2],i[5])
+        data = (crm.final,i[1])
+        print (data)
+        app.cur.execute("UPDATE pubs set crm = ? where id = ?",data)
+        app.con.commit()
 

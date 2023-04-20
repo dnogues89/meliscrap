@@ -7,13 +7,15 @@ class Decoder:
         self.traccion = ""
         self.titulo = titulo
         self.url = url
-        self.decode_pubs()
+        self.decode_pubs(url.replace('-aut-','at').replace("-"," "))
+        self.decode_pubs(titulo)
 
 
-    def decode_pubs(self):
-        texto = f'{self.titulo} {self.url.replace("-"," ")}'.lower().replace("confortline",'comfortline').replace(',',".").replace('3.0','v6').replace('starline','trendline').replace('startline','trendline').replace("t cross","t-cross").replace('manual','mt').replace('automatica','at').replace('automatico','at').replace('man','mt')
+
+    def decode_pubs(self,string):
+        texto = f'{string}'.lower().replace("confortline",'comfortline').replace(',',".").replace('3.0','v6').replace('starline','trendline').replace('startline','trendline').replace("t cross","t-cross").replace('manual','mt').replace('automatica','at').replace('automatico','at').replace('man','mt').replace('inmediata','').replace('pat','').replace('extreme black','black style')
         familias = ["Polo","Virtus","T-Cross","Nivus","Vento","Taos","Tiguan","Saveiro","Amarok"]
-        versiones = ["Trendline", "Comfortline","Highline","Hero","Extreme"]
+        versiones = ["Trendline", "Comfortline","Highline","Hero","Extreme","Life","Black Style"]
         motor = ['2.0','V6']
         caja = ['MT','AT']
         traccion = ['4x2','4x4']
@@ -53,6 +55,11 @@ class Decoder:
         if self.familia != "Amarok":
             self.motor = ""
             self.traccion = ""
-            self.caja = ""
 
         self.final = f'{self.familia} {self.motor} {self.version} {self.traccion} {self.caja}'.replace("  "," ").replace("  "," ").replace("  "," ").replace("  "," ").replace("  "," ")
+
+if "__main__"==__name__:
+    titulo = 'Volkswagen Polo 1.6 Msi Trendline'
+    url = 'https://auto.mercadolibre.com.ar/MLA-1363641155-volkswagen-polo-trend-16-aut-msi-co-_JM#position=41&search_layout=grid&type=item&tracking_id=4ae834cd-b7cb-4a52-877b-f9ad41923887'
+    a = Decoder(titulo,url)
+    print(a.final)

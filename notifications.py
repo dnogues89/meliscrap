@@ -39,20 +39,20 @@ class Notification:
             }
         response = requests.post(self.webhook,json=card)
         if response.status_code == 200:
-            print(f"Fecha {today}")
+            print(f"Fecha {today} - {self.dealer}")
         else:
             print(response.content)
 
     def get_prices_by_dealer(self):
         if self.dealer == 'test':
             self.dealer = 'Autotag'
-        new_price = pd.DataFrame(data = self.db.dealers_new_price(self.dealer),columns=['Actualizacion','Orden',"familia",'desc','Publicaciones','new'])
-        old_price = pd.DataFrame(data = self.db.dealers_last_price(self.dealer),columns=['Actualizacion','Orden',"familia",'desc','Publicaciones','old'])
+        new_price = pd.DataFrame(data = self.db.dealers_new_price(self.dealer),columns=['Actualizacion','Orden',"familia",'desc','Publicaciones','new','Pauta_new'])
+        old_price = pd.DataFrame(data = self.db.dealers_last_price(self.dealer),columns=['Actualizacion','Orden',"familia",'desc','Publicaciones','old','Pauta_old'])
         df = pd.merge(new_price,old_price,on='Orden')
         df['variacion'] = round((df['new'] - df['old']) / df['old'] * 100,1)
         df = df[(df['variacion'] > 2) | (df['variacion'] < -2)]
 
-        df = df[['Orden','desc_x','new','variacion','old','Publicaciones_y','Publicaciones_x','Actualizacion_x','Actualizacion_y']]
+        df = df[['Orden','desc_x','new','variacion','old','Publicaciones_y','Publicaciones_x','Actualizacion_x','Actualizacion_y','Pauta_new','Pauta_old']]
         return df
 
     def post_dealer_price_info(self):
@@ -83,6 +83,10 @@ class Notification:
                 {
                     "name": "Diferencia",
                     "value": "${:,}".format(round(row['new']-row['old']))
+                },
+                {
+                    "name": "Pautas",
+                    "value": "**Antes:** {}%\r **Ahora:** {}% ".format(row['Pauta_old'],row['Pauta_new'])
                 }
             ]
         }

@@ -29,6 +29,7 @@ class CreatePdfs:
         self.three_days_before = three_days_before.strftime('%d/%m/%Y')
         self.create_new_pdf()
         self.calculate_with()
+        self.siomaa_date = ""
         
         
     def calculate_with(self):
@@ -41,8 +42,11 @@ class CreatePdfs:
             save_path = f'{path}.pdf'
         self.pdf.output(save_path, 'F')
     
-    def create_new_pdf(self):
-        self.pdf.title = f"Análisis de precios de {self.dealer} desde {self.three_days_before} al {self.today}"
+    def create_new_pdf(self,title=""):
+        if title == "":
+            self.pdf.title = f"Análisis de precios de {self.dealer} desde {self.three_days_before} al {self.today}"
+        else:
+            self.pdf.title = title
         self.pdf.add_page()
         self.pdf.set_font('Helvetica', 'B', 10) #tipo y tamaño letra
         self.pdf.set_auto_page_break(auto=True, margin=15)
@@ -102,7 +106,9 @@ class CreatePdfs:
         self.pdf.ln()
         self.pdf.cell(5, 4, 'Pautas positivas significa encima de precio lista', 0, 0, 'L', True)
         self.pdf.ln()
-        self.pdf.cell(10, 4, '* Columna P_Dif diferencia de pautas, sin tener en cuenta precio de oferta (si existiera)', 0, 0, 'L', True)  
+        self.pdf.cell(10, 4, '* Columna P_Dif diferencia de pautas (Si hay ofertas, vs ofertas)', 0, 0, 'L', True)  
+        self.pdf.ln()
+        self.pdf.cell(10, 4, '* Columna siomaa contiene el stock de siomaa con fecha actualizada al '+self.siomaa_date, 0, 0, 'L', True)  
         self.pdf.ln()
         self.pdf.set_fill_color(167,244,167) # Si somos mas Baratos Verde
         # self.pdf.set_text_color(4,109,4)
@@ -113,7 +119,9 @@ class CreatePdfs:
         self.pdf.cell(5, 4, '     - Somos mas caros', 0, 0, 'L', True)  
         self.pdf.ln()  
 
-    def add_new_page(self):
+    def add_new_page(self,title=""):
+        if title != "":
+            self.pdf.title = title
         self.pdf.add_page()
 
     def create_table(self,preheader:bool,notes:bool):
@@ -132,20 +140,13 @@ class CreatePdfs:
 if "__main__" == __name__:
 
     repo = Repository()
-    header , data = repo.get_pauta_actual('Espasa')
+    header , data = repo.get_pauta_actual('Autotag')
     data.insert(0,header)
-    pre_header = ["","","","","a","b Mio","c %","d %","e","f %","(c-d)%","g","h","i"]
+    pre_header = ["","","","","a","b Mio","c %","d %","e","f %","(c-d/f)%","g","h","i","j"]
     data.insert(0,pre_header)
-
-    pdf = CreatePdfs(data,"Espasa")
-    print(data[4])
+    print(data)
+    pdf = CreatePdfs(data,'Autotag')
+    pdf.siomaa_date = repo.get_fecha_stock_siomaa()[0][0]
     pdf.create_table(True,True)
-    pdf.add_new_page()
-    header,data = repo.get_pubs('Espasa')
-    data.insert(0,header)
-    pdf.data = data
-    pdf.calculate_with()
-    pdf.create_table(False,False)
-    pdf.save()
-
+    pdf.save('Prueba')   
 
