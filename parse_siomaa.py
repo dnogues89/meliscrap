@@ -35,7 +35,7 @@ def download_stock(page,models):
         page.get_by_text('Por Versión').click()
         page.wait_for_load_state('networkidle')
         save_stock(parse_item(page.content())[0])
-        print(i)
+        print(f'Info - {i} OK')
 
 def download_daily_registrations(page):
     page.goto('https://www.siomaa.com/V2/Vehiculo/Index/',wait_until='networkidle')
@@ -54,6 +54,7 @@ def save_registrations(date,rows):
 
 def main_siomaa(models):
     url = 'https://www.siomaa.com/User/SignIn'
+    print('Buscando info de stock RED: \n')
     with sync_playwright() as pw:
         browser = pw.chromium.launch(headless=True)
         page = browser.new_page()
