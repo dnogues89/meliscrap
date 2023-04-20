@@ -58,8 +58,9 @@ header , data = repo.get_pauta_actual_by_model()
 data.insert(0,header)
 pre_header = ["","","","","a","b Mio","c %","d %","e","f %","(c-d/f)%","g","h","i",'j']
 data.insert(0,pre_header)
-print(data)
 pdf = CreatePdfs(data,'Modelos')
 pdf.siomaa_date = repo.get_fecha_stock_siomaa()[0][0]
 pdf.create_table(True,True)
 pdf.save()   
+
+print('\nProceso terminado')

@@ -107,7 +107,7 @@ class Notification:
             # r = requests.post(self.webhook,json.dumps(card),headers={'Content-Type':'application/json'})
             response = requests.post(self.webhook,json=card)
             if response.status_code == 200:
-                print(f"La tarjeta Adaptive se ha enviado correctamente. {row['desc_x']} - {row['Publicaciones_x']}")
+                print(f"ACTUALIZACION. {row['desc_x']} - {row['Publicaciones_x']} - Pautas: {row['Pauta_old']} vs {row['Pauta_new']}")
             else:
                 print(response.content)
 
